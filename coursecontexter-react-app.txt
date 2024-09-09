@@ -1,0 +1,278 @@
+import React, { useState, useEffect } from 'react';
+
+// Simulated backend data
+let users = [];
+let reviews = [];
+
+function Login({ onLogin }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const user = users.find(u => u.username === username && u.password === password);
+    if (user) {
+      onLogin(user);
+    } else {
+      alert('Invalid credentials');
+    }
+  };
+
+  return (
+    <form onSubmit={handleLogin} className="space-y-4">
+      <input
+        type="text"
+        placeholder="Username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        className="w-full p-2 border rounded"
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className="w-full p-2 border rounded"
+      />
+      <button type="submit" className="w-full p-2 bg-blue-500 text-white rounded">Login</button>
+    </form>
+  );
+}
+
+function Register({ onRegister }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [major, setMajor] = useState('');
+
+  const handleRegister = (e) => {
+    e.preventDefault();
+    if (users.some(u => u.username === username)) {
+      alert('Username already exists');
+    } else {
+      const newUser = { username, password, major, reviewCount: 0 };
+      users.push(newUser);
+      onRegister(newUser);
+    }
+  };
+
+  return (
+    <form onSubmit={handleRegister} className="space-y-4">
+      <input
+        type="text"
+        placeholder="Username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        className="w-full p-2 border rounded"
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className="w-full p-2 border rounded"
+      />
+      <input
+        type="text"
+        placeholder="Major"
+        value={major}
+        onChange={(e) => setMajor(e.target.value)}
+        className="w-full p-2 border rounded"
+      />
+      <button type="submit" className="w-full p-2 bg-green-500 text-white rounded">Register</button>
+    </form>
+  );
+}
+
+function ReviewForm({ user, onSubmitReview }) {
+  const [course, setCourse] = useState('');
+  const [personalContext, setPersonalContext] = useState('');
+  const [strengths, setStrengths] = useState('');
+  const [weaknesses, setWeaknesses] = useState('');
+  const [reviewText, setReviewText] = useState('');
+  const [rating, setRating] = useState(5);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const newReview = {
+      id: reviews.length + 1,
+      course,
+      studentMajor: user.major,
+      personalContext,
+      strengths,
+      weaknesses,
+      review: reviewText,
+      rating: parseInt(rating, 10)
+    };
+    reviews.push(newReview);
+    user.reviewCount++;
+    onSubmitReview(newReview);
+    // Clear form after submission
+    setCourse('');
+    setPersonalContext('');
+    setStrengths('');
+    setWeaknesses('');
+    setReviewText('');
+    setRating(5);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <input
+        type="text"
+        placeholder="Course Code"
+        value={course}
+        onChange={(e) => setCourse(e.target.value)}
+        className="w-full p-2 border rounded"
+      />
+      <textarea
+        placeholder="Personal Context"
+        value={personalContext}
+        onChange={(e) => setPersonalContext(e.target.value)}
+        className="w-full p-2 border rounded"
+      />
+      <input
+        type="text"
+        placeholder="Strengths"
+        value={strengths}
+        onChange={(e) => setStrengths(e.target.value)}
+        className="w-full p-2 border rounded"
+      />
+      <input
+        type="text"
+        placeholder="Weaknesses"
+        value={weaknesses}
+        onChange={(e) => setWeaknesses(e.target.value)}
+        className="w-full p-2 border rounded"
+      />
+      <textarea
+        placeholder="Review"
+        value={reviewText}
+        onChange={(e) => setReviewText(e.target.value)}
+        className="w-full p-2 border rounded"
+      />
+      <select
+        value={rating}
+        onChange={(e) => setRating(e.target.value)}
+        className="w-full p-2 border rounded"
+      >
+        {[1, 2, 3, 4, 5].map(n => (
+          <option key={n} value={n}>{n}</option>
+        ))}
+      </select>
+      <button type="submit" className="w-full p-2 bg-purple-500 text-white rounded">Submit Review</button>
+    </form>
+  );
+}
+
+function App() {
+  const [user, setUser] = useState(null);
+  const [showRegister, setShowRegister] = useState(false);
+  const [courses] = useState(['CS101', 'MATH201', 'ENG105', 'PHYS301']);
+  const [selectedCourse, setSelectedCourse] = useState('');
+  const [userReviews, setUserReviews] = useState([]);
+
+  useEffect(() => {
+    // Simulated initial data
+    if (reviews.length === 0) {
+      reviews.push({
+        id: 1,
+        course: 'CS101',
+        studentMajor: 'Computer Science',
+        personalContext: 'Working part-time, first-generation college student',
+        strengths: 'Problem-solving, coding',
+        weaknesses: 'Time management',
+        review: 'Challenging but rewarding course. Professor was helpful.',
+        rating: 4
+      });
+    }
+  }, []);
+
+  const handleLogin = (user) => {
+    setUser(user);
+    setUserReviews(reviews.filter(review => review.studentMajor === user.major));
+  };
+
+  const handleRegister = (user) => {
+    setUser(user);
+    setShowRegister(false);
+    setUserReviews([]);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setUserReviews([]);
+  };
+
+  const handleSubmitReview = (newReview) => {
+    setUserReviews(prevReviews => [...prevReviews, newReview]);
+    alert('Review submitted successfully!');
+  };
+
+  const filteredReviews = selectedCourse
+    ? userReviews.filter(review => review.course === selectedCourse)
+    : userReviews;
+
+  if (!user) {
+    return (
+      <div className="container mx-auto p-4">
+        <h1 className="text-3xl font-bold mb-4">CourseContexter</h1>
+        <p className="mb-4">Providing context for your academic journey</p>
+        {showRegister ? (
+          <Register onRegister={handleRegister} />
+        ) : (
+          <Login onLogin={handleLogin} />
+        )}
+        <button
+          onClick={() => setShowRegister(!showRegister)}
+          className="mt-4 p-2 bg-gray-500 text-white rounded"
+        >
+          {showRegister ? 'Switch to Login' : 'Switch to Register'}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-4">CourseContexter</h1>
+      <p>Welcome, {user.username}! You have submitted {user.reviewCount} reviews.</p>
+      <button onClick={handleLogout} className="mt-2 p-2 bg-red-500 text-white rounded">Logout</button>
+
+      {user.reviewCount >= 3 ? (
+        <>
+          <h2 className="text-2xl font-semibold mt-4">View Reviews</h2>
+          <select
+            className="mt-2 p-2 border rounded"
+            value={selectedCourse}
+            onChange={(e) => setSelectedCourse(e.target.value)}
+          >
+            <option value="">All Courses</option>
+            {courses.map(course => (
+              <option key={course} value={course}>{course}</option>
+            ))}
+          </select>
+          <div className="grid gap-4 mt-4">
+            {filteredReviews.map(review => (
+              <div key={review.id} className="border p-4 rounded shadow">
+                <h3 className="text-xl font-semibold">{review.course}</h3>
+                <p><strong>Student Major:</strong> {review.studentMajor}</p>
+                <p><strong>Personal Context:</strong> {review.personalContext}</p>
+                <p><strong>Strengths:</strong> {review.strengths}</p>
+                <p><strong>Weaknesses:</strong> {review.weaknesses}</p>
+                <p><strong>Review:</strong> {review.review}</p>
+                <p><strong>Rating:</strong> {review.rating}/5</p>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <p className="mt-4 text-red-500">You need to submit at least 3 reviews to view other reviews.</p>
+      )}
+
+      <h2 className="text-2xl font-semibold mt-8">Submit a Review</h2>
+      <ReviewForm user={user} onSubmitReview={handleSubmitReview} />
+    </div>
+  );
+}
+
+export default App;
